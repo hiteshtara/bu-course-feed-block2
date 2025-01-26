@@ -1,18 +1,55 @@
-import { TextControl, ToggleControl, PanelBody } from '@wordpress/components';
+import { useState, useEffect } from '@wordpress/element';
+import { SelectControl, TextControl, ToggleControl, PanelBody } from '@wordpress/components';
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 
 export default function Edit({ attributes, setAttributes }) {
   const { include, exclude, period, showSections, showSchedules } = attributes;
 
+  // State for API data
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/wp-json/bu-course-feed/v1/courses');
+        const data = await response.json();
+        setCourses(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Dropdown options
+  const courseOptions = loading
+    ? [{ label: 'Loading...', value: '' }]
+    : courses.length
+    ? [
+        { label: 'Select a Course', value: '' },
+        ...courses.map((course) => ({
+          label: course.course,
+          value: course.course,
+        })),
+      ]
+    : [{ label: 'No courses available', value: '' }];
+
   return (
     <>
-      {/* Sidebar Controls */}
+      {/* Inspector Controls */}
       <InspectorControls>
         <PanelBody title="Course Feed Settings" initialOpen={true}>
-          <TextControl
+          <SelectControl
             label="Include Courses"
             value={include}
+            options={courseOptions}
             onChange={(value) => setAttributes({ include: value })}
+            disabled={loading}
           />
           <TextControl
             label="Exclude Courses"
@@ -37,21 +74,14 @@ export default function Edit({ attributes, setAttributes }) {
         </PanelBody>
       </InspectorControls>
 
-      {/* Editor Preview */}
+      {/* Block Content */}
       <div {...useBlockProps()}>
         <p>
-          BU Course Feed Block Preview:
-          <br />
-          Include: {include || "None"}
-          <br />
-          Exclude: {exclude || "None"}
-          <br />
-          Period: {period || "None"}
-          <br />
-          Show Sections: {showSections ? "Yes" : "No"}
-          <br />
-          Show Schedules: {showSchedules ? "Yes" : "No"}
+          Selected Course: {include || 'None'} <br />
+          Period: {period || 'Not Set'}
         </p>
+        {showSections && <p>Sections are displayed.</p>}
+        {showSchedules && <p>Schedules are displayed.</p>}
       </div>
     </>
   );
