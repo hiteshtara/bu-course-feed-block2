@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name:       BU Course Feed Block
- * Description:       Example block scaffolded with Create Block tool.
+ * Description:       Example block scaffolded with Create Block tool, including a shortcode.
  * Version:           0.1.0
  * Requires at least: 6.7
  * Requires PHP:      7.4
@@ -46,13 +46,13 @@ add_action('init', 'bu_course_feed_block_init');
 function render_bu_course_feed_block($attributes)
 {
 	// Parse and sanitize attributes with default values.
-	$attributes = wp_parse_args($attributes, array(
+	$attributes = shortcode_atts(array(
 		'include'        => '',
 		'exclude'        => '',
 		'period'         => '',
 		'showSections'   => false,
 		'showSchedules'  => false,
-	));
+	), $attributes, 'bu-course-feed');
 
 	$include = esc_attr($attributes['include']);
 	$exclude = esc_attr($attributes['exclude']);
@@ -60,28 +60,34 @@ function render_bu_course_feed_block($attributes)
 	$show_sections = $attributes['showSections'] ? 'true' : 'false';
 	$show_schedules = $attributes['showSchedules'] ? 'true' : 'false';
 
-	// Construct the HTML output.
-	$output = sprintf(
-		'<div class="bu-course-feed-block" data-include="%s" data-exclude="%s" data-period="%s" data-show-sections="%s" data-show-schedules="%s">',
+	// Generate the output.
+	return sprintf(
+		'<div class="bu-course-feed-block" data-include="%s" data-exclude="%s" data-period="%s" data-show-sections="%s" data-show-schedules="%s">Course feed content goes here.</div>',
 		$include,
 		$exclude,
 		$period,
 		$show_sections,
 		$show_schedules
 	);
-
-	// Append additional content (e.g., shortcode output).
-	$output .= do_shortcode(sprintf(
-		'[bu-course-feed include="%s" exclude="%s" period="%s" show_sections="%s" show_schedules="%s"]',
-		$include,
-		$exclude,
-		$period,
-		$show_sections,
-		$show_schedules
-	));
-
-	// Close the wrapper.
-	$output .= '</div>';
-
-	return $output;
 }
+
+/**
+ * Register the shortcode for BU Course Feed.
+ *
+ * @param array $atts Shortcode attributes.
+ * @return string Rendered content.
+ */
+function bu_course_feed_shortcode($atts)
+{
+	$atts = shortcode_atts(array(
+		'include'        => '',
+		'exclude'        => '',
+		'period'         => '',
+		'showSections'   => false,
+		'showSchedules'  => false,
+	), $atts, 'bu-course-feed');
+
+	// Use the same logic as the block's render callback.
+	return render_bu_course_feed_block($atts);
+}
+add_shortcode('bu-course-feed', 'bu_course_feed_shortcode');
