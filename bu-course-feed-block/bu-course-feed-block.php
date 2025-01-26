@@ -45,7 +45,6 @@ add_action('init', 'bu_course_feed_block_init');
  */
 function render_bu_course_feed_block($attributes)
 {
-	// Parse and sanitize attributes with default values.
 	$attributes = shortcode_atts(array(
 		'include'        => '',
 		'exclude'        => '',
@@ -60,7 +59,7 @@ function render_bu_course_feed_block($attributes)
 	$show_sections = $attributes['showSections'];
 	$show_schedules = $attributes['showSchedules'];
 
-	// Fetch courses from the API.
+	// Fetch courses from the API
 	$response = wp_remote_get(home_url('/wp-json/bu-course-feed/v1/courses'));
 	$courses = array();
 
@@ -68,37 +67,38 @@ function render_bu_course_feed_block($attributes)
 		$courses = json_decode(wp_remote_retrieve_body($response), true);
 	}
 
-	// Filter courses based on attributes.
-	if (!empty($attributes['include'])) {
-		$included = explode(',', $attributes['include']);
-		$courses = array_filter($courses, function ($course) use ($included) {
+	// Filter the courses only for rendering output
+	$filtered_courses = $courses;
+
+	if (!empty($include)) {
+		$included = explode(',', $include);
+		$filtered_courses = array_filter($filtered_courses, function ($course) use ($included) {
 			return in_array($course['course'], $included, true);
 		});
 	}
 
-	if (!empty($attributes['exclude'])) {
-		$excluded = explode(',', $attributes['exclude']);
-		$courses = array_filter($courses, function ($course) use ($excluded) {
+	if (!empty($exclude)) {
+		$excluded = explode(',', $exclude);
+		$filtered_courses = array_filter($filtered_courses, function ($course) use ($excluded) {
 			return !in_array($course['course'], $excluded, true);
 		});
 	}
 
-	if (!empty($attributes['period'])) {
-		$courses = array_filter($courses, function ($course) use ($attributes) {
-			return $course['period'] === $attributes['period'];
+	if (!empty($period)) {
+		$filtered_courses = array_filter($filtered_courses, function ($course) use ($period) {
+			return $course['period'] === $period;
 		});
 	}
 
-	// Generate output.
+	// Generate output
 	ob_start();
 	echo '<div class="bu-course-feed-block">';
-	if (!empty($courses)) {
+	if (!empty($filtered_courses)) {
 		echo '<ul>';
-		foreach ($courses as $course) {
+		foreach ($filtered_courses as $course) {
 			echo '<li>';
 			echo '<strong>' . esc_html($course['course']) . '</strong> (' . esc_html($course['period']) . ')';
 
-			// Display sections if enabled.
 			if ($show_sections && !empty($course['sections'])) {
 				echo '<ul>';
 				foreach ($course['sections'] as $section) {
@@ -123,6 +123,7 @@ function render_bu_course_feed_block($attributes)
 	return ob_get_clean();
 }
 
+
 /**
  * Register the shortcode for BU Course Feed.
  *
@@ -131,17 +132,75 @@ function render_bu_course_feed_block($attributes)
  */
 function bu_course_feed_shortcode($atts)
 {
+	// Define default attributes
 	$atts = shortcode_atts(array(
 		'include'        => '',
 		'exclude'        => '',
 		'period'         => '',
-		'showSections'   => false,
-		'showSchedules'  => false,
+		'show_sections'  => false,
+		'show_schedules' => false,
 	), $atts, 'bu-course-feed');
 
-	// Use the same logic as the block's render callback.
-	return render_bu_course_feed_block($atts);
+	// Fetch all courses
+	$courses = bu_course_feed_get_courses();
+
+	// Filter courses based on attributes
+	if (!empty($atts['include'])) {
+		$include = explode(',', $atts['include']);
+		$courses = array_filter($courses, function ($course) use ($include) {
+			return in_array($course['course'], $include, true);
+		});
+	}
+
+	if (!empty($atts['exclude'])) {
+		$exclude = explode(',', $atts['exclude']);
+		$courses = array_filter($courses, function ($course) use ($exclude) {
+			return !in_array($course['course'], $exclude, true);
+		});
+	}
+
+	if (!empty($atts['period'])) {
+		$courses = array_filter($courses, function ($course) use ($atts) {
+			return $course['period'] === $atts['period'];
+		});
+	}
+
+	// Generate the HTML output
+	ob_start();
+
+	if (!empty($courses)) {
+		echo '<div class="bu-course-feed">';
+		echo '<ul>';
+		foreach ($courses as $course) {
+			echo '<li>';
+			echo '<strong>' . esc_html($course['course']) . '</strong> (' . esc_html($course['period']) . ')';
+
+			// Show sections if enabled
+			if ($atts['show_sections'] && !empty($course['sections'])) {
+				echo '<ul>';
+				foreach ($course['sections'] as $section) {
+					echo '<li>';
+					echo 'Section: ' . esc_html($section['id']);
+					if ($atts['show_schedules'] && isset($section['schedule'])) {
+						echo ' - Schedule: ' . esc_html($section['schedule']);
+					}
+					echo '</li>';
+				}
+				echo '</ul>';
+			}
+
+			echo '</li>';
+		}
+		echo '</ul>';
+		echo '</div>';
+	} else {
+		echo '<p>No courses match the selected criteria.</p>';
+	}
+
+	return ob_get_clean();
 }
+add_shortcode('bu-course-feed', 'bu_course_feed_shortcode');
+
 add_shortcode('bu-course-feed', 'bu_course_feed_shortcode');
 
 /**
@@ -175,7 +234,7 @@ function bu_course_feed_get_courses()
 			'sections' => array(
 				array('id' => '101', 'schedule' => 'Monday, 9 AM - 11 AM'),
 				array('id' => '102', 'schedule' => 'Wednesday, 1 PM - 3 PM'),
-				array('id' => '103', 'schedule' => 'Friday, 10 AM - 12 PM')
+				array('id' => '103', 'schedule' => 'Friday, 10 AM - 12 PM'),
 			),
 		),
 		array(
@@ -184,7 +243,7 @@ function bu_course_feed_get_courses()
 			'period'   => 'Spring',
 			'sections' => array(
 				array('id' => '201', 'schedule' => 'Tuesday, 8 AM - 10 AM'),
-				array('id' => '202', 'schedule' => 'Thursday, 2 PM - 4 PM')
+				array('id' => '202', 'schedule' => 'Thursday, 2 PM - 4 PM'),
 			),
 		),
 		array(
@@ -194,7 +253,6 @@ function bu_course_feed_get_courses()
 			'sections' => array(
 				array('id' => '301', 'schedule' => 'Monday, 10 AM - 12 PM'),
 				array('id' => '302', 'schedule' => 'Wednesday, 3 PM - 5 PM'),
-				array('id' => '303', 'schedule' => 'Friday, 1 PM - 3 PM')
 			),
 		),
 		array(
@@ -203,7 +261,7 @@ function bu_course_feed_get_courses()
 			'period'   => 'Fall',
 			'sections' => array(
 				array('id' => '401', 'schedule' => 'Tuesday, 9 AM - 11 AM'),
-				array('id' => '402', 'schedule' => 'Thursday, 1 PM - 3 PM')
+				array('id' => '402', 'schedule' => 'Thursday, 1 PM - 3 PM'),
 			),
 		),
 		array(
@@ -213,7 +271,7 @@ function bu_course_feed_get_courses()
 			'sections' => array(
 				array('id' => '501', 'schedule' => 'Monday, 11 AM - 1 PM'),
 				array('id' => '502', 'schedule' => 'Wednesday, 2 PM - 4 PM'),
-				array('id' => '503', 'schedule' => 'Friday, 9 AM - 11 AM')
+				array('id' => '503', 'schedule' => 'Friday, 9 AM - 11 AM'),
 			),
 		),
 		array(
@@ -221,7 +279,7 @@ function bu_course_feed_get_courses()
 			'course'   => 'English Literature',
 			'period'   => 'Winter',
 			'sections' => array(
-				array('id' => '601', 'schedule' => 'Thursday, 10 AM - 12 PM')
+				array('id' => '601', 'schedule' => 'Thursday, 10 AM - 12 PM'),
 			),
 		),
 		array(
@@ -230,7 +288,7 @@ function bu_course_feed_get_courses()
 			'period'   => 'Fall',
 			'sections' => array(
 				array('id' => '701', 'schedule' => 'Monday, 8 AM - 10 AM'),
-				array('id' => '702', 'schedule' => 'Wednesday, 1 PM - 3 PM')
+				array('id' => '702', 'schedule' => 'Wednesday, 1 PM - 3 PM'),
 			),
 		),
 		array(
@@ -239,7 +297,7 @@ function bu_course_feed_get_courses()
 			'period'   => 'Summer',
 			'sections' => array(
 				array('id' => '801', 'schedule' => 'Tuesday, 10 AM - 12 PM'),
-				array('id' => '802', 'schedule' => 'Thursday, 2 PM - 4 PM')
+				array('id' => '802', 'schedule' => 'Thursday, 2 PM - 4 PM'),
 			),
 		),
 		array(
@@ -247,7 +305,8 @@ function bu_course_feed_get_courses()
 			'course'   => 'Philosophy',
 			'period'   => 'Winter',
 			'sections' => array(
-				array('id' => '901', 'schedule' => 'Monday, 9 AM - 11 AM')
+				array('id' => '901', 'schedule' => 'Monday, 9 AM - 11 AM'),
+				array('id' => '902', 'schedule' => 'Wednesday, 11 AM - 1 PM'),
 			),
 		),
 		array(
@@ -256,10 +315,56 @@ function bu_course_feed_get_courses()
 			'period'   => 'Spring',
 			'sections' => array(
 				array('id' => '1001', 'schedule' => 'Tuesday, 1 PM - 3 PM'),
-				array('id' => '1002', 'schedule' => 'Friday, 10 AM - 12 PM')
+				array('id' => '1002', 'schedule' => 'Friday, 10 AM - 12 PM'),
+			),
+		),
+		array(
+			'id'       => 11,
+			'course'   => 'Astronomy',
+			'period'   => 'Summer',
+			'sections' => array(
+				array('id' => '1101', 'schedule' => 'Monday, 9 AM - 11 AM'),
+				array('id' => '1102', 'schedule' => 'Thursday, 1 PM - 3 PM'),
+			),
+		),
+		array(
+			'id'       => 12,
+			'course'   => 'Music',
+			'period'   => 'Fall',
+			'sections' => array(
+				array('id' => '1201', 'schedule' => 'Tuesday, 8 AM - 10 AM'),
+				array('id' => '1202', 'schedule' => 'Friday, 2 PM - 4 PM'),
+			),
+		),
+		array(
+			'id'       => 13,
+			'course'   => 'Economics',
+			'period'   => 'Winter',
+			'sections' => array(
+				array('id' => '1301', 'schedule' => 'Monday, 11 AM - 1 PM'),
+				array('id' => '1302', 'schedule' => 'Thursday, 3 PM - 5 PM'),
+			),
+		),
+		array(
+			'id'       => 14,
+			'course'   => 'Political Science',
+			'period'   => 'Spring',
+			'sections' => array(
+				array('id' => '1401', 'schedule' => 'Wednesday, 10 AM - 12 PM'),
+				array('id' => '1402', 'schedule' => 'Friday, 1 PM - 3 PM'),
+			),
+		),
+		array(
+			'id'       => 15,
+			'course'   => 'Sociology',
+			'period'   => 'Fall',
+			'sections' => array(
+				array('id' => '1501', 'schedule' => 'Tuesday, 9 AM - 11 AM'),
+				array('id' => '1502', 'schedule' => 'Thursday, 11 AM - 1 PM'),
 			),
 		),
 	);
 }
+
 
 add_action('rest_api_init', 'bu_course_feed_register_api');

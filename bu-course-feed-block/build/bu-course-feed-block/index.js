@@ -31,34 +31,41 @@ function Edit({
   const {
     include,
     exclude,
-    period,
-    showSections,
-    showSchedules
+    period
   } = attributes;
-
-  // State for API data
   const [courses, setCourses] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
+  const [periods, setPeriods] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const [loading, setLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
-
-  // Fetch courses from API
+  const [error, setError] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const fetchCourses = async () => {
       try {
         const response = await fetch('/wp-json/bu-course-feed/v1/courses');
+        if (!response.ok) throw new Error('Failed to fetch courses');
         const data = await response.json();
+        console.log('Fetched courses:', data); // Debugging: log the data
+
+        // Extract unique periods
+        const uniquePeriods = Array.from(new Set(data.map(course => course.period)));
         setCourses(data);
-        setLoading(false);
+        setPeriods(uniquePeriods);
+        setError(false);
       } catch (error) {
         console.error('Error fetching courses:', error);
+        setError(true);
+      } finally {
         setLoading(false);
       }
     };
     fetchCourses();
   }, []);
 
-  // Dropdown options
+  // Generate dropdown options
   const courseOptions = loading ? [{
     label: 'Loading...',
+    value: ''
+  }] : error ? [{
+    label: 'Error fetching courses',
     value: ''
   }] : courses.length ? [{
     label: 'Select a Course',
@@ -68,6 +75,22 @@ function Edit({
     value: course.course
   }))] : [{
     label: 'No courses available',
+    value: ''
+  }];
+  const periodOptions = loading ? [{
+    label: 'Loading...',
+    value: ''
+  }] : error ? [{
+    label: 'Error fetching periods',
+    value: ''
+  }] : periods.length ? [{
+    label: 'Select a Period',
+    value: ''
+  }, ...periods.map(period => ({
+    label: period,
+    value: period
+  }))] : [{
+    label: 'No periods available',
     value: ''
   }];
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.Fragment, {
@@ -83,41 +106,44 @@ function Edit({
             include: value
           }),
           disabled: loading
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.TextControl, {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.SelectControl, {
           label: "Exclude Courses",
           value: exclude,
+          options: courseOptions,
           onChange: value => setAttributes({
             exclude: value
-          })
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.TextControl, {
+          }),
+          disabled: loading
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.SelectControl, {
           label: "Period",
           value: period,
+          options: periodOptions,
           onChange: value => setAttributes({
             period: value
-          })
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.ToggleControl, {
-          label: "Show Sections",
-          checked: showSections,
-          onChange: value => setAttributes({
-            showSections: value
-          })
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.ToggleControl, {
-          label: "Show Schedules",
-          checked: showSchedules,
-          onChange: value => setAttributes({
-            showSchedules: value
-          })
+          }),
+          disabled: loading
         })]
       })
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
       ...(0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)(),
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("p", {
-        children: ["Selected Course: ", include || 'None', " ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("br", {}), "Period: ", period || 'Not Set']
-      }), showSections && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-        children: "Sections are displayed."
-      }), showSchedules && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-        children: "Schedules are displayed."
-      })]
+      children: loading ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+        children: "Loading courses..."
+      }) : error ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+        children: "Error loading courses. Please try again later."
+      }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.Fragment, {
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("p", {
+          children: ["Selected Include: ", include || 'None', " ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("br", {}), "Selected Exclude: ", exclude || 'None', " ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("br", {}), "Selected Period: ", period || 'Not Set']
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("ul", {
+          children: courses.filter(course => {
+            if (include && course.course !== include) return false;
+            if (exclude && course.course === exclude) return false;
+            if (period && course.period !== period) return false;
+            return true;
+          }).map(course => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("li", {
+            children: [course.course, " - ", course.period]
+          }, course.id))
+        })]
+      })
     })]
   });
 }
