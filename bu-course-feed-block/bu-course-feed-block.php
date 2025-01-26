@@ -57,8 +57,8 @@ function render_bu_course_feed_block($attributes)
 	$include = esc_attr($attributes['include']);
 	$exclude = esc_attr($attributes['exclude']);
 	$period = esc_attr($attributes['period']);
-	$show_sections = $attributes['showSections'] ? 'true' : 'false';
-	$show_schedules = $attributes['showSchedules'] ? 'true' : 'false';
+	$show_sections = $attributes['showSections'];
+	$show_schedules = $attributes['showSchedules'];
 
 	// Fetch courses from the API.
 	$response = wp_remote_get(home_url('/wp-json/bu-course-feed/v1/courses'));
@@ -83,6 +83,12 @@ function render_bu_course_feed_block($attributes)
 		});
 	}
 
+	if (!empty($attributes['period'])) {
+		$courses = array_filter($courses, function ($course) use ($attributes) {
+			return $course['period'] === $attributes['period'];
+		});
+	}
+
 	// Generate output.
 	ob_start();
 	echo '<div class="bu-course-feed-block">';
@@ -91,9 +97,21 @@ function render_bu_course_feed_block($attributes)
 		foreach ($courses as $course) {
 			echo '<li>';
 			echo '<strong>' . esc_html($course['course']) . '</strong> (' . esc_html($course['period']) . ')';
-			if ($attributes['showSections']) {
-				echo '<p>Sections: ' . implode(', ', array_map('esc_html', $course['sections'])) . '</p>';
+
+			// Display sections if enabled.
+			if ($show_sections && !empty($course['sections'])) {
+				echo '<ul>';
+				foreach ($course['sections'] as $section) {
+					echo '<li>';
+					echo 'Section: ' . esc_html($section['id']);
+					if ($show_schedules && isset($section['schedule'])) {
+						echo ' - Schedule: ' . esc_html($section['schedule']);
+					}
+					echo '</li>';
+				}
+				echo '</ul>';
 			}
+
 			echo '</li>';
 		}
 		echo '</ul>';
@@ -154,61 +172,92 @@ function bu_course_feed_get_courses()
 			'id'       => 1,
 			'course'   => 'Computer Science',
 			'period'   => 'Fall',
-			'sections' => array('101', '102', '103'),
+			'sections' => array(
+				array('id' => '101', 'schedule' => 'Monday, 9 AM - 11 AM'),
+				array('id' => '102', 'schedule' => 'Wednesday, 1 PM - 3 PM'),
+				array('id' => '103', 'schedule' => 'Friday, 10 AM - 12 PM')
+			),
 		),
 		array(
 			'id'       => 2,
 			'course'   => 'Mathematics',
 			'period'   => 'Spring',
-			'sections' => array('201', '202'),
+			'sections' => array(
+				array('id' => '201', 'schedule' => 'Tuesday, 8 AM - 10 AM'),
+				array('id' => '202', 'schedule' => 'Thursday, 2 PM - 4 PM')
+			),
 		),
 		array(
 			'id'       => 3,
 			'course'   => 'Biology',
 			'period'   => 'Summer',
-			'sections' => array('301', '302', '303'),
+			'sections' => array(
+				array('id' => '301', 'schedule' => 'Monday, 10 AM - 12 PM'),
+				array('id' => '302', 'schedule' => 'Wednesday, 3 PM - 5 PM'),
+				array('id' => '303', 'schedule' => 'Friday, 1 PM - 3 PM')
+			),
 		),
 		array(
 			'id'       => 4,
 			'course'   => 'Physics',
 			'period'   => 'Fall',
-			'sections' => array('401', '402'),
+			'sections' => array(
+				array('id' => '401', 'schedule' => 'Tuesday, 9 AM - 11 AM'),
+				array('id' => '402', 'schedule' => 'Thursday, 1 PM - 3 PM')
+			),
 		),
 		array(
 			'id'       => 5,
 			'course'   => 'Chemistry',
 			'period'   => 'Spring',
-			'sections' => array('501', '502', '503'),
+			'sections' => array(
+				array('id' => '501', 'schedule' => 'Monday, 11 AM - 1 PM'),
+				array('id' => '502', 'schedule' => 'Wednesday, 2 PM - 4 PM'),
+				array('id' => '503', 'schedule' => 'Friday, 9 AM - 11 AM')
+			),
 		),
 		array(
 			'id'       => 6,
 			'course'   => 'English Literature',
 			'period'   => 'Winter',
-			'sections' => array('601'),
+			'sections' => array(
+				array('id' => '601', 'schedule' => 'Thursday, 10 AM - 12 PM')
+			),
 		),
 		array(
 			'id'       => 7,
 			'course'   => 'History',
 			'period'   => 'Fall',
-			'sections' => array('701', '702'),
+			'sections' => array(
+				array('id' => '701', 'schedule' => 'Monday, 8 AM - 10 AM'),
+				array('id' => '702', 'schedule' => 'Wednesday, 1 PM - 3 PM')
+			),
 		),
 		array(
 			'id'       => 8,
 			'course'   => 'Art',
 			'period'   => 'Summer',
-			'sections' => array('801', '802'),
+			'sections' => array(
+				array('id' => '801', 'schedule' => 'Tuesday, 10 AM - 12 PM'),
+				array('id' => '802', 'schedule' => 'Thursday, 2 PM - 4 PM')
+			),
 		),
 		array(
 			'id'       => 9,
 			'course'   => 'Philosophy',
 			'period'   => 'Winter',
-			'sections' => array('901'),
+			'sections' => array(
+				array('id' => '901', 'schedule' => 'Monday, 9 AM - 11 AM')
+			),
 		),
 		array(
 			'id'       => 10,
 			'course'   => 'Psychology',
 			'period'   => 'Spring',
-			'sections' => array('1001', '1002'),
+			'sections' => array(
+				array('id' => '1001', 'schedule' => 'Tuesday, 1 PM - 3 PM'),
+				array('id' => '1002', 'schedule' => 'Friday, 10 AM - 12 PM')
+			),
 		),
 	);
 }
