@@ -1,55 +1,113 @@
-=== Bu Course Feed Block ===
-Contributors:      The WordPress Contributors
-Tags:              block
-Tested up to:      6.7
-Stable tag:        0.1.0
-License:           GPL-2.0-or-later
-License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+BU Course Feed Block
 
-Example block scaffolded with Create Block tool.
+A WordPress plugin that provides a custom Gutenberg block for displaying Boston University course feeds, complete with filtering options, a REST API for dynamic data, and shortcode support.
 
-== Description ==
+Features
 
-This is the long description. No limit, and you can use Markdown (as well as in the following sections).
+Custom Gutenberg Block: Add a block to display courses with options to filter by included courses, excluded courses, and period.
 
-For backwards compatibility, if this section is missing, the full length of the short description will be used, and
-Markdown parsed.
+Dynamic Data: Fetch courses dynamically via a custom REST API.
 
-== Installation ==
+Shortcode Support: Use the [bu-course-feed] shortcode to display course feeds anywhere.
 
-This section describes how to install the plugin and get it working.
+Customizable: Options to show/hide sections and schedules.
 
-e.g.
+Installation
 
-1. Upload the plugin files to the `/wp-content/plugins/bu-course-feed-block` directory, or install the plugin through the WordPress plugins screen directly.
-1. Activate the plugin through the 'Plugins' screen in WordPress
+Download the plugin folder and place it in the wp-content/plugins/ directory of your WordPress installation.
 
+Go to Plugins in the WordPress admin dashboard.
 
-== Frequently Asked Questions ==
+Find "BU Course Feed Block" in the list and click Activate.
 
-= A question that someone might have =
+Usage
 
-An answer to that question.
+Block Editor
 
-= What about foo bar? =
+Add a new page or edit an existing page/post.
 
-Answer to foo bar dilemma.
+Click the + button to add a new block.
 
-== Screenshots ==
+Search for "BU Course Feed Block" and insert it.
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the /assets directory or the directory that contains the stable readme.txt (tags or trunk). Screenshots in the /assets
-directory take precedence. For example, `/assets/screenshot-1.png` would win over `/tags/4.3/screenshot-1.png`
-(or jpg, jpeg, gif).
-2. This is the second screen shot
+Configure the block settings in the sidebar:
 
-== Changelog ==
+Include Courses: Select specific courses to include.
 
-= 0.1.0 =
-* Release
+Exclude Courses: Enter course names to exclude (comma-separated).
 
-== Arbitrary section ==
+Period: Filter by a specific period (e.g., Fall, Spring).
 
-You may provide arbitrary sections, in the same format as the ones above. This may be of use for extremely complicated
-plugins where more information needs to be conveyed that doesn't fit into the categories of "description" or
-"installation." Arbitrary sections will be shown below the built-in sections outlined above.
+Show Sections: Toggle to show or hide sections.
+
+Show Schedules: Toggle to show or hide schedules.
+
+Save or publish the page and preview the frontend.
+
+Shortcode
+
+Use the [bu-course-feed] shortcode in a page, post, or widget. Available attributes:
+
+[bu-course-feed include="Computer Science,Physics" exclude="Mathematics" period="Fall" showSections="true" showSchedules="false"]
+
+include: Comma-separated list of courses to include.
+
+exclude: Comma-separated list of courses to exclude.
+
+period: Filter by period (e.g., Fall, Spring).
+
+showSections: true or false to show/hide sections.
+
+showSchedules: true or false to show/hide schedules.
+
+REST API
+
+A custom REST API endpoint is available for fetching course data dynamically.
+
+Endpoint: /wp-json/bu-course-feed/v1/courses
+
+Example Response:
+
+[
+    {
+        "id": 1,
+        "course": "Computer Science",
+        "period": "Fall",
+        "sections": ["101", "102", "103"]
+    },
+    {
+        "id": 2,
+        "course": "Mathematics",
+        "period": "Spring",
+        "sections": ["201", "202"]
+    }
+]
+
+Testing
+
+Block Editor
+
+Add the block to a page.
+
+Test the "Include Courses," "Exclude Courses," and "Period" fields.
+
+Toggle "Show Sections" and "Show Schedules" and verify the preview updates dynamically.
+
+Frontend
+
+Save or publish the page.
+
+Verify the output matches the block configuration.
+
+REST API
+
+Navigate to /wp-json/bu-course-feed/v1/courses in your browser or use a tool like Postman.
+
+Verify the API returns the correct course data.
+
+Shortcode
+
+Add a shortcode to a page or post with different combinations of attributes.
+
+Verify the output matches the specified filters.
+
