@@ -225,7 +225,7 @@ module.exports = window["wp"]["i18n"];
   \*********************************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/bu-course-feed-block","version":"0.1.0","title":"Bu Course Feed Block","category":"widgets","icon":"smiley","description":"Example block scaffolded with Create Block tool.","example":{},"supports":{"html":false},"textdomain":"bu-course-feed-block","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","viewScript":"file:./view.js"}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"bu-course-feed/course-feed-block","version":"0.1.0","title":"BU Course Feed Block","category":"widgets","icon":"list-view","description":"Display Boston University course feeds in a block.","example":{},"supports":{"html":false},"textdomain":"bu-course-feed-block","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","viewScript":"file:./view.js","attributes":{"include":{"type":"string","default":""},"exclude":{"type":"string","default":""},"period":{"type":"string","default":""},"showSections":{"type":"boolean","default":false},"showSchedules":{"type":"boolean","default":false}}}');
 
 /***/ })
 

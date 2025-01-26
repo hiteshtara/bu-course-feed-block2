@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "create-block/bu-course-feed-block",
+  "name": "bu-course-feed/course-feed-block",
   "version": "0.1.0",
-  "title": "Bu Course Feed Block",
+  "title": "BU Course Feed Block",
   "category": "widgets",
-  "icon": "smiley",
-  "description": "Example block scaffolded with Create Block tool.",
+  "icon": "list-view",
+  "description": "Display Boston University course feeds in a block.",
   "example": {},
   "supports": {
     "html": false
@@ -15,5 +15,27 @@
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
   "style": "file:./style-index.css",
-  "viewScript": "file:./view.js"
+  "viewScript": "file:./view.js",
+  "attributes": {
+    "include": {
+      "type": "string",
+      "default": ""
+    },
+    "exclude": {
+      "type": "string",
+      "default": ""
+    },
+    "period": {
+      "type": "string",
+      "default": ""
+    },
+    "showSections": {
+      "type": "boolean",
+      "default": false
+    },
+    "showSchedules": {
+      "type": "boolean",
+      "default": false
+    }
+  }
 }
